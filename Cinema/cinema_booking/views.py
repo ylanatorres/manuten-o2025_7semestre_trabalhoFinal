@@ -7,7 +7,7 @@ from .serializers import *
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
 from django.core.exceptions import ObjectDoesNotExist
-
+from datetime import datetime
 
 # Create your views here.
 class AvailableSlotsViewsets(generics.ListAPIView):
@@ -16,7 +16,7 @@ class AvailableSlotsViewsets(generics.ListAPIView):
     filter_backends = [SearchFilter, ]
     search_fields = ['date']
 
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
         serializer = self.get_serializer(queryset, many=True)
@@ -28,7 +28,7 @@ class SeatsList(generics.ListAPIView):
     filter_backends = [SearchFilter, ]
     search_fields = ['name', 'deck__deck_name', 'date']
 
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
         CinemaArrangeSlot.slot_updater(self=self)
@@ -49,63 +49,68 @@ class BookSeatsViewsets(viewsets.ModelViewSet):
         return BookSeat.objects.filter(user=self.request.user).order_by('-created_at')
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=self.request.data)
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            if self.request.user.is_admin or self.request.user.is_employee or self.request.user.is_customer:
-                seat_query = Seat.objects.get(id=self.request.data.get('seat'))
+            if request.user.is_admin or request.user.is_employee or request.user.is_customer:
+                seat_query = Seat.objects.get(id=request.data.get('seat'))
                 deck_query = CinemaDeck.objects.get(id=seat_query.deck.id)
                 available_slot_query = Available_Slots.objects.get(id=seat_query.available_slot.id)
                 arrrange_slot_query = CinemaArrangeSlot.objects.get(id=available_slot_query.slot.id)
                 cinema_query = Cinema.objects.get(id=arrrange_slot_query.cinema.id)
-                data = serializer.save(user=self.request.user, booking_price=deck_query.price)
-                Seat.seat_book(self=self, seat=self.request.data.get('seat'), user=self.request.user)
-                Notification.objects.create(seat=data, user=self.request.user,
-                                            text="Hello {}, you have book movie {}, on date {}.".format(
-                                                self.request.user,
-                                                cinema_query.movie_name,
-                                                available_slot_query.date))
-                BookSeat.send_mail(user=self.request.user, movie=cinema_query.movie_name,
-                                   date=available_slot_query.date, email=self.request.user.email, self=self)
+                
+                booked_seat = serializer.save(user=request.user, booking_price=deck_query.price)
+                
+                Seat.seat_book(self=self, seat=request.data.get('seat'), user=request.user)
+                
+                Notification.objects.create(
+                    seat=booked_seat, 
+                    user=request.user,
+                    text="Hello {}, you have book movie {}, on date {}.".format(
+                        request.user,
+                        cinema_query.movie_name,
+                        available_slot_query.date
+                    )
+                )
+                
+                BookSeat.send_mail(
+                    user=request.user, 
+                    movie=cinema_query.movie_name,
+                    date=available_slot_query.date, 
+                    email=request.user.email, 
+                    self=self
+                )
                 return Response(serializer.data, status=200)
             else:
                 return Response({"NO_ACCESS": "Access Denied"}, status=401)
-        else:
-            return Response(serializer.errors, status=400)
+        return Response(serializer.errors, status=400)
 
     def retrieve(self, request, *args, **kwargs):
-        if self.request.user.is_admin or self.request.user.is_employee or self.request.user.is_customer:
+        if request.user.is_admin or request.user.is_employee or request.user.is_customer:
             try:
-                queryset = BookSeat.objects.get(id=self.kwargs["id"])
-                serializer = BookSeatSerializer(queryset)
+                instance = self.get_object()
+                serializer = self.get_serializer(instance)
                 return Response(serializer.data, status=200)
-            except:
+            except (ObjectDoesNotExist, Exception):
                 return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
         else:
             return Response({"NO_ACCESS": "Access Denied"}, status=401)
 
     def perform_update(self, serializer):
-        # only admin or employee will be able to update and delete
-        queryset = BookSeat.objects.get(id=self.kwargs["id"])
+        # Correção do SonarCloud: Usamos o serializer passado no argumento
         if self.request.user.is_admin or self.request.user.is_employee:
-            serializer = self.get_serializer(queryset, data=self.request.data, partial=True)
-            if serializer.is_valid(raise_exception=True):
-                serializer.save(updated_at=datetime.now())
-                serializer = BookSeatSerializer(queryset)
-                return Response(serializer.data, status=200)
-            return Response({"NO_ACCESS": "Access Denied"}, status=401)
+            serializer.save(updated_at=datetime.now())
         else:
-            return Response({"NO_ACCESS": "Access Denied"}, status=401)
+            # Em Viewsets, erros de permissão geralmente são tratados antes, 
+            # mas mantendo sua lógica de retorno manual:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Access Denied")
 
     def perform_destroy(self, instance):
         if self.request.user.is_admin or self.request.user.is_employee:
-            try:
-                instance = BookSeat.objects.get(id=self.kwargs["id"])
-                instance.delete()
-                return Response({"Seat Deleted": "Access Granted"}, status=204)
-            except:
-                return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
+            instance.delete()
         else:
-            return Response({"NO_ACCESS": "Access Denied"}, status=401)
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Access Denied")
 
 
 class SeatManagerViewsets(viewsets.ModelViewSet):
@@ -118,21 +123,18 @@ class SeatManagerViewsets(viewsets.ModelViewSet):
         return seat_manager.objects.all()
 
     def perform_create(self, serializer):
-        serializer = self.get_serializer(data=self.request.data)
-        if serializer.is_valid(raise_exception=True):
-            if self.request.user.is_admin or self.request.user.is_employee:
-                serializer.save()
-                return Response(serializer.data, status=200)
-            else:
-                return Response({"NO_ACCESS": "Access Denied"}, status=401)
+        # Correção: O DRF já instanciou o serializer para nós
+        if self.request.user.is_admin or self.request.user.is_employee:
+            serializer.save()
         else:
-            return Response(serializer.errors, status=400)
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Access Denied")
 
     def retrieve(self, request, *args, **kwargs):
-        if self.request.user.is_admin or self.request.user.is_employee:
+        if request.user.is_admin or request.user.is_employee:
             try:
-                queryset = seat_manager.objects.get(id=self.kwargs["id"])
-                serializer = self.get_serializer(queryset)
+                instance = self.get_object()
+                serializer = self.get_serializer(instance)
                 return Response(serializer.data, status=200)
             except ObjectDoesNotExist:
                 return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
@@ -140,28 +142,23 @@ class SeatManagerViewsets(viewsets.ModelViewSet):
             return Response({"NO_ACCESS": "Access Denied"}, status=401)
 
     def update(self, request, *args, **kwargs):
-        try:
-            if self.request.user.is_admin or self.request.user.is_employee:
-                try:
-                    queryset = seat_manager.objects.get(id=self.kwargs["id"])
-                    serializer = self.get_serializer(queryset, data=self.request.data, partial=True)
-                    if serializer.is_valid(raise_exception=True):
-                        serializer.save(updated_at=datetime.now())
-                        return Response(serializer.data, status=200)
-                    else:
-                        return Response(serializer.errors, status=400)
-                except ObjectDoesNotExist:
-                    return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
-        except:
+        if not (request.user.is_admin or request.user.is_employee):
             return Response({"NO_ACCESS": "Access Denied"}, status=401)
+            
+        try:
+            partial = kwargs.pop('partial', False)
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save(updated_at=datetime.now())
+                return Response(serializer.data, status=200)
+            return Response(serializer.errors, status=400)
+        except ObjectDoesNotExist:
+            return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
 
     def perform_destroy(self, instance):
         if self.request.user.is_admin or self.request.user.is_superuser:
-            try:
-                queryset = seat_manager.objects.get(id=self.kwargs["id"])
-                queryset.delete()
-                return Response({"Successful": "successful"}, status=204)
-            except ObjectDoesNotExist:
-                return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
+            instance.delete()
         else:
-            return Response({"NO_ACCESS": "Access Denied"}, status=401)
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Access Denied")
