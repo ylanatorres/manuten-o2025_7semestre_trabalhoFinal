@@ -5,7 +5,7 @@ from djmoney.models.fields import MoneyField
 from django.core.mail import send_mail
 
 
-class Available_Slots(models.Model):
+class AvailableSlots(models.Model):
     id = models.AutoField(primary_key=True)
     date = models.DateField(auto_now=False)
     slot = models.ForeignKey("managecinema.CinemaArrangeSlot", on_delete=models.CASCADE)
@@ -17,7 +17,7 @@ class Available_Slots(models.Model):
         return "{}".format(self.date)
 
 
-class seat_manager(models.Model):
+class SeatManager(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=1, unique=True)
     created_at = models.DateTimeField(auto_now=True)
@@ -56,7 +56,7 @@ class Seat(models.Model):
                 if datetime.datetime.now() > datetime.datetime.combine(i.date, datetime.time(0, 0)):
                     i.active = False
                     i.save()
-            except Exception as e:
+            except Exception:
                 pass
 
 

@@ -1,6 +1,8 @@
 import datetime
 from django.db import models
 from djmoney.models.fields import MoneyField
+
+# Imports dos modelos externos
 from cinema_booking.models import Available_Slots, seat_manager, Seat
 
 
@@ -54,36 +56,60 @@ class CinemaArrangeSlot(models.Model):
     def __str__(self):
         return "{}-{}".format(self.cinema, self.start_time)
 
+    # --- CORREÇÃO: Redução de Complexidade Cognitiva ---
     def slot_maker(self):
-        query = CinemaArrangeSlot.objects.all()
-        dates = datetime.date.today()
-        for i in query:
-            if not Available_Slots.objects.filter(slot=i, date=datetime.date.today()):
-                Available_Slots.objects.create(slot=i, date=datetime.datetime.today(), active=True)
-            for j in range(0, 2):
-                dates += datetime.timedelta(days=1)
-                if not Available_Slots.objects.filter(slot=i, date=dates):
-                    Available_Slots.objects.create(slot=i, date=dates, active=True)
-                elif Available_Slots.objects.filter(slot=i, date=dates):
-                    pass
+        # Busca slots existentes
+        slots = CinemaArrangeSlot.objects.all()
+        today = datetime.date.today()
+        
+        for slot in slots:
+            # Cria para hoje (se não existir)
+            Available_Slots.objects.get_or_create(
+                slot=slot, 
+                date=today, 
+                defaults={'active': True}
+            )
+            
+            # Cria para os próximos 2 dias
+            current_date = today
+            for _ in range(2):
+                current_date += datetime.timedelta(days=1)
+                Available_Slots.objects.get_or_create(
+                    slot=slot, 
+                    date=current_date, 
+                    defaults={'active': True}
+                )
 
+    # --- CORREÇÃO: Redução Drástica de Loops Aninhados e ifs ---
     def seat_maker(self):
-        for i in CinemaDeck.objects.filter(active=True):
-            for j in seat_manager.objects.all():
-                for k in Available_Slots.objects.filter(active=True):
-                    for l in range(0, 2):
-                        if not Seat.objects.filter(name=l, deck=i, date=k.date, seat=j, available_slot=k):
-                            Seat.objects.create(name=l, deck=i, date=k.date, seat=j,
-                                                available_slot=k)
-                        if Seat.objects.filter(name=l, deck=i, date=k.date, seat=j, available_slot=k):
-                            pass
+        decks = CinemaDeck.objects.filter(active=True)
+        managers = seat_manager.objects.all()
+        active_slots = Available_Slots.objects.filter(active=True)
+
+        for deck in decks:
+            for manager in managers:
+                for slot in active_slots:
+                    for name_idx in range(0, 2):
+                        # get_or_create substitui toda aquela lógica de "if not exists: create else: pass"
+                        # Isso resolve o erro de complexidade do SonarCloud
+                        Seat.objects.get_or_create(
+                            name=name_idx,
+                            deck=deck,
+                            date=slot.date,
+                            seat=manager,
+                            available_slot=slot
+                        )
 
     def slot_updater(self):
-        for i in Available_Slots.objects.all():
-            try:
-                date = datetime.datetime.now() - datetime.timedelta(days=1)
-                if date > datetime.datetime.combine(i.date, datetime.time(0, 0)):
-                    i.active = False
-                    i.save()
-            except Exception as e:
-                pass
+        # Lógica otimizada: Filtra apenas os slots antigos e desativa
+        # Isso evita loops desnecessários e try/except vazios
+        yesterday_limit = datetime.datetime.now() - datetime.timedelta(days=1)
+        
+        # Considerando que 'date' em Available_Slots é um DateField
+        expired_slots = Available_Slots.objects.filter(
+            date__lt=yesterday_limit.date(), 
+            active=True
+        )
+        
+        # Atualização em massa é mais eficiente
+        expired_slots.update(active=False)

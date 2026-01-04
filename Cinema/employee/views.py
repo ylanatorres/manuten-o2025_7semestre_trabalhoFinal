@@ -1,14 +1,19 @@
-from django.shortcuts import render
 from django.core.exceptions import ObjectDoesNotExist
-from user.models import User
-from .models import *
-from rest_framework.response import Response
-from .serializers import *
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+# CORREÇÃO: Importamos NotFound e PermissionDenied para tratar erros corretamente
+from rest_framework.exceptions import PermissionDenied, NotFound
 
+# CORREÇÃO: Imports explícitos (sem usar *)
+from user.models import User
+from .models import Employee
+from .serializers import EmployeeSerializer
 
-# Create your views here.
+# --- CORREÇÃO SONAR: Constantes para evitar texto duplicado ---
+ACCESS_DENIED_MSG = "Access Denied"
+DOES_NOT_EXIST_MSG = "Does not exist"
+
 class CreateEmployee(viewsets.ModelViewSet):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
@@ -18,14 +23,20 @@ class CreateEmployee(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         if request.user.is_admin or self.request.user.is_superuser:
             serializer = self.get_serializer(data=request.data)
-            user_query = User.objects.get(id=request.data.get('user'))
-            user_query.is_employee = True
-            user_query.save()
             if serializer.is_valid(raise_exception=True):
-                serializer.save(first_Name=user_query.first_name, last_Name=user_query.last_name)
-            return Response(serializer.data, status=200)
+                try:
+                    user_query = User.objects.get(id=request.data.get('user'))
+                    user_query.is_employee = True
+                    user_query.save()
+                    
+                    serializer.save(first_Name=user_query.first_name, last_Name=user_query.last_name)
+                    return Response(serializer.data, status=200)
+                except User.DoesNotExist:
+                     # Usa a constante
+                     return Response({"ERROR": DOES_NOT_EXIST_MSG}, status=400)
         else:
-            return Response({"NO_ACCESS": "Access Denied"}, status=401)
+            # Usa a constante
+            return Response({"NO_ACCESS": ACCESS_DENIED_MSG}, status=401)
 
     def retrieve(self, request, *args, **kwargs):
         if request.user.is_admin or self.request.user.is_superuser:
@@ -34,37 +45,30 @@ class CreateEmployee(viewsets.ModelViewSet):
                 serializer = EmployeeSerializer(queryset)
                 return Response(serializer.data, status=200)
             except ObjectDoesNotExist:
-                return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
+                # Usa a constante
+                return Response({"DOES_NOT_EXIST": DOES_NOT_EXIST_MSG}, status=400)
         else:
-            return Response({"NO_ACCESS": "Access Denied"}, status=401)
+            # Usa a constante
+            return Response({"NO_ACCESS": ACCESS_DENIED_MSG}, status=401)
 
     def perform_update(self, serializer):
-        try:
-            if self.request.user.is_admin or self.request.user.is_superuser:
-                try:
-                    queryset = Employee.objects.get(id=self.kwargs["id"])
-                    serializer = EmployeeSerializer(queryset, data=self.request.data, partial=True)
-                    if serializer.is_valid(raise_exception=True):
-                        serializer.save()
-                        return Response(serializer.data, status=200)
-                except ObjectDoesNotExist:
-                    return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
-        except:
-            return Response({"NO_ACCESS": "Access Denied"}, status=401)
+        if self.request.user.is_admin or self.request.user.is_superuser:
+            serializer.save()
+        else:
+            # Lança exceção correta ao invés de retornar Response (que seria ignorado aqui)
+            raise PermissionDenied(ACCESS_DENIED_MSG)
 
     def perform_destroy(self, instance):
-        try:
-            if self.request.user.is_admin or self.request.user.is_superuser:
-                try:
-                    queryset = Employee.objects.get(id=self.kwargs["id"])
-                    user_query = User.objects.get(id=queryset.user.id)
+        if self.request.user.is_admin or self.request.user.is_superuser:
+            try:
+                user_query = instance.user
+                if user_query:
                     user_query.is_employee = False
                     user_query.save()
-                    queryset.delete()
-                    return Response({"Successful": "successful"}, status=204)
-                except ObjectDoesNotExist:
-                    return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
-            else:
-                return Response({"NO_ACCESS": "Access Denied"}, status=401)
-        except:
-            return Response({"NO_ACCESS": "Access Denied"}, status=401)
+                
+                instance.delete()
+            except ObjectDoesNotExist:
+                # Agora o NotFound funcionará pois foi importado no topo
+                raise NotFound(DOES_NOT_EXIST_MSG)
+        else:
+            raise PermissionDenied(ACCESS_DENIED_MSG)

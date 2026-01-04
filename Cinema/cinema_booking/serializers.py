@@ -5,7 +5,7 @@ from .models import *
 
 class AvailableSlotsReadSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Available_Slots
+        model = AvailableSlots
         fields = '__all__'
         depth = 2
 

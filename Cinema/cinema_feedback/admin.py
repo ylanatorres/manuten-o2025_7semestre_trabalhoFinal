@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import *
-# Register your models here.
+# --- CORREÇÃO: Importar apenas Review ---
+from .models import Review
 
+# Register your models here.
 admin.site.register(Review)

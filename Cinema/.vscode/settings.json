@@ -1,0 +1,7 @@
+{
+    "sonarlint.analysis.excludes": [
+        "**/.venv/**",
+        "**/venv/**",
+        "**/site-packages/**"
+    ]
+}

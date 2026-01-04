@@ -1,12 +1,24 @@
+import datetime
 from rest_framework import viewsets
 from rest_framework.response import Response
-from cinema_booking.models import Seat
-from cinema_booking.models import Available_Slots
-from .models import *
-from .serializers import *
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
 
+# --- CORREÇÃO DO SONAR: Imports explícitos (Fim do import *) ---
+from cinema_booking.models import Seat, Available_Slots
+from .models import Cinema, CinemaDeck, MovieDurationSlot, CinemaArrangeSlot
+from .serializers import (
+    CinemaSerializer,
+    CinemaDeckSerializer,
+    MovieDurationSlotSerializer,
+    CinemaArrangeSlotReadSerializer,
+    CinemaArrangeSlotWriteSerializer
+)
+
+# --- CORREÇÃO DO SONAR: Constantes para evitar duplicação de strings ---
+ACCESS_DENIED_MSG = "Access Denied"
+DOES_NOT_EXIST_MSG = "Does not exist"
+ACCESS_GRANTED_MSG = "Access Granted"
 
 class CinemaViewsets(viewsets.ModelViewSet):
     queryset = Cinema.objects.all()
@@ -24,31 +36,33 @@ class CinemaViewsets(viewsets.ModelViewSet):
                 serializer.save()
             return Response(serializer.data, status=200)
         else:
-            return Response({"NO_ACCESS": "Access Denied"}, status=401)
+            return Response({"NO_ACCESS": ACCESS_DENIED_MSG}, status=401)
 
     def update(self, request, *args, **kwargs):
         try:
             instance = Cinema.objects.get(id=self.kwargs["id"])
         except ObjectDoesNotExist:
-            return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
+            return Response({"DOES_NOT_EXIST": DOES_NOT_EXIST_MSG}, status=400)
+        
         if self.request.user.is_admin or self.request.user.is_employee:
             serializer = self.get_serializer(instance, data=request.data, partial=True)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
                 return Response(serializer.data, status=200)
-            else:
-                return Response({"error": "Access Denied"}, status=401)
+        
+        return Response({"error": ACCESS_DENIED_MSG}, status=401)
 
     def destroy(self, request, *args, **kwargs):
         try:
             instance = Cinema.objects.get(id=self.kwargs["id"])
         except ObjectDoesNotExist:
-            return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
+            return Response({"DOES_NOT_EXIST": DOES_NOT_EXIST_MSG}, status=400)
+        
         if self.request.user.is_admin or self.request.user.is_employee:
             instance.delete()
-            return Response({"successful": "Access Granted"}, status=200)
+            return Response({"successful": ACCESS_GRANTED_MSG}, status=200)
         else:
-            return Response({"error": "Access Denied"}, status=401)
+            return Response({"error": ACCESS_DENIED_MSG}, status=401)
 
 
 class CinemaDeckViewsets(viewsets.ModelViewSet):
@@ -67,31 +81,33 @@ class CinemaDeckViewsets(viewsets.ModelViewSet):
                 serializer.save(active=True)
             return Response(serializer.data, status=200)
         else:
-            return Response({"NO_ACCESS": "Access Denied"}, status=401)
+            return Response({"NO_ACCESS": ACCESS_DENIED_MSG}, status=401)
 
     def update(self, request, *args, **kwargs):
         try:
             instance = CinemaDeck.objects.get(id=self.kwargs["id"])
         except ObjectDoesNotExist:
-            return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
+            return Response({"DOES_NOT_EXIST": DOES_NOT_EXIST_MSG}, status=400)
+        
         if self.request.user.is_admin or self.request.user.is_employee:
             serializer = self.get_serializer(instance, data=request.data, partial=True)
             if serializer.is_valid(raise_exception=True):
                 serializer.save(updated_at=datetime.datetime.now())
                 return Response(serializer.data, status=200)
-            else:
-                return Response({"error": "Access Denied"}, status=401)
+        
+        return Response({"error": ACCESS_DENIED_MSG}, status=401)
 
     def destroy(self, request, *args, **kwargs):
         try:
             instance = CinemaDeck.objects.get(id=self.kwargs["id"])
         except ObjectDoesNotExist:
-            return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
+            return Response({"DOES_NOT_EXIST": DOES_NOT_EXIST_MSG}, status=400)
+        
         if self.request.user.is_admin or self.request.user.is_employee:
             instance.delete()
-            return Response({"successful": "Access Granted"}, status=200)
+            return Response({"successful": ACCESS_GRANTED_MSG}, status=200)
         else:
-            return Response({"error": "Access Denied"}, status=401)
+            return Response({"error": ACCESS_DENIED_MSG}, status=401)
 
 
 class CinemaSlotsDurationViewsets(viewsets.ModelViewSet):
@@ -110,31 +126,33 @@ class CinemaSlotsDurationViewsets(viewsets.ModelViewSet):
                 serializer.save(active=True)
             return Response(serializer.data, status=200)
         else:
-            return Response({"NO_ACCESS": "Access Denied"}, status=401)
+            return Response({"NO_ACCESS": ACCESS_DENIED_MSG}, status=401)
 
     def update(self, request, *args, **kwargs):
         try:
             instance = MovieDurationSlot.objects.get(id=self.kwargs["id"])
         except ObjectDoesNotExist:
-            return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
+            return Response({"DOES_NOT_EXIST": DOES_NOT_EXIST_MSG}, status=400)
+        
         if self.request.user.is_admin or self.request.user.is_employee:
             serializer = self.get_serializer(instance, data=request.data, partial=True)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
                 return Response(serializer.data, status=200)
-            else:
-                return Response({"error": "Access Denied"}, status=401)
+        
+        return Response({"error": ACCESS_DENIED_MSG}, status=401)
 
     def destroy(self, request, *args, **kwargs):
         try:
             instance = MovieDurationSlot.objects.get(id=self.kwargs["id"])
         except ObjectDoesNotExist:
-            return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
+            return Response({"DOES_NOT_EXIST": DOES_NOT_EXIST_MSG}, status=400)
+        
         if self.request.user.is_admin or self.request.user.is_employee:
             instance.delete()
-            return Response({"successful": "Access Granted"}, status=200)
+            return Response({"successful": ACCESS_GRANTED_MSG}, status=200)
         else:
-            return Response({"error": "Access Denied"}, status=401)
+            return Response({"error": ACCESS_DENIED_MSG}, status=401)
 
 
 class CinemaArrangeSlotViewsets(viewsets.ModelViewSet):
@@ -152,42 +170,53 @@ class CinemaArrangeSlotViewsets(viewsets.ModelViewSet):
             serializer = CinemaArrangeSlotWriteSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
                 data = serializer.save(active=True)
-                query = MovieDurationSlot.objects.get(id=(request.data.get('duration_slot')))
-                get_query = CinemaArrangeSlot.objects.get(id=data.id)
-                fulldate = datetime.datetime(100, 1, 1, (get_query.start_time).hour, (get_query.start_time).minute,
-                                             (get_query.start_time).second)
-                next_time = fulldate + datetime.timedelta(seconds=(query.duration).seconds)
-                get_query.end_time = next_time.time()
-                get_query.save()
-                if data:
-                    CinemaArrangeSlot.slot_updater(self=self)
-                    CinemaArrangeSlot.slot_maker(self=self)
-                    CinemaArrangeSlot.seat_maker(self=self)
-                serializer = CinemaArrangeSlotReadSerializer(get_query)
-            return Response(serializer.data, status=200)
-        else:
-            return Response({"NO_ACCESS": "Access Denied"}, status=401)
+                
+                # Lógica de cálculo de tempo
+                try:
+                    query = MovieDurationSlot.objects.get(id=(request.data.get('duration_slot')))
+                    get_query = CinemaArrangeSlot.objects.get(id=data.id)
+                    
+                    fulldate = datetime.datetime(100, 1, 1, (get_query.start_time).hour, (get_query.start_time).minute,
+                                                (get_query.start_time).second)
+                    next_time = fulldate + datetime.timedelta(seconds=(query.duration).seconds)
+                    get_query.end_time = next_time.time()
+                    get_query.save()
+                    
+                    if data:
+                        # Chamada dos métodos do Model (mantendo a lógica original)
+                        CinemaArrangeSlot.slot_updater(self=self)
+                        CinemaArrangeSlot.slot_maker(self=self)
+                        CinemaArrangeSlot.seat_maker(self=self)
+                    
+                    serializer = CinemaArrangeSlotReadSerializer(get_query)
+                    return Response(serializer.data, status=200)
+                except ObjectDoesNotExist:
+                    return Response({"DOES_NOT_EXIST": DOES_NOT_EXIST_MSG}, status=400)
+
+        return Response({"NO_ACCESS": ACCESS_DENIED_MSG}, status=401)
 
     def update(self, request, *args, **kwargs):
         try:
             instance = CinemaArrangeSlot.objects.get(id=self.kwargs["id"])
         except ObjectDoesNotExist:
-            return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
+            return Response({"DOES_NOT_EXIST": DOES_NOT_EXIST_MSG}, status=400)
+        
         if self.request.user.is_admin or self.request.user.is_employee:
             serializer = self.get_serializer(instance, data=request.data, partial=True)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
                 return Response(serializer.data, status=200)
-            else:
-                return Response({"error": "Access Denied"}, status=401)
+        
+        return Response({"error": ACCESS_DENIED_MSG}, status=401)
 
     def destroy(self, request, *args, **kwargs):
         try:
             instance = CinemaArrangeSlot.objects.get(id=self.kwargs["id"])
         except ObjectDoesNotExist:
-            return Response({"DOES_NOT_EXIST": "Does not exist"}, status=400)
+            return Response({"DOES_NOT_EXIST": DOES_NOT_EXIST_MSG}, status=400)
+        
         if self.request.user.is_admin or self.request.user.is_employee:
             instance.delete()
-            return Response({"successful": "Access Granted"}, status=200)
+            return Response({"successful": ACCESS_GRANTED_MSG}, status=200)
         else:
-            return Response({"error": "Access Denied"}, status=401)
+            return Response({"error": ACCESS_DENIED_MSG}, status=401)

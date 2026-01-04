@@ -24,6 +24,6 @@ class NotificationListView(generics.ListAPIView):
 class UnreadNotificationCount(APIView):
 
     def get(self, request):
-        dict = {}
-        dict['unseen_notification'] = Notification.objects.filter(read=False, user=self.request.user).count()
-        return Response(dict)
+        dicti = {}
+        dicti['unseen_notification'] = Notification.objects.filter(read=False, user=self.request.user).count()
+        return Response(dicti)
