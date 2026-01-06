@@ -3,10 +3,9 @@ from django.db import models
 from djmoney.models.fields import MoneyField
 
 # Imports dos modelos externos
-from cinema_booking.models import Available_Slots, seat_manager, Seat
-
-
+from cinema_booking.models import AvailableSlots, SeatManager, Seat
 class Cinema(models.Model):
+    image = models.ImageField(upload_to='movies/', blank=True, null=True)
     id = models.AutoField(primary_key=True)
     movie_name = models.CharField(max_length=200, unique=True)
     release_date = models.DateField(auto_now=False)
@@ -14,7 +13,7 @@ class Cinema(models.Model):
     created_at = models.DateTimeField(auto_now=True)
     updated_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
-    all_review = models.ManyToManyField("cinema_feedback.Review")
+    all_review = models.ManyToManyField('cinema_feedback.Review', blank=True)
 
     def __str__(self):
         return "{}-{}".format(self.movie_name, self.release_date)
@@ -64,7 +63,7 @@ class CinemaArrangeSlot(models.Model):
         
         for slot in slots:
             # Cria para hoje (se não existir)
-            Available_Slots.objects.get_or_create(
+            AvailableSlots.objects.get_or_create(
                 slot=slot, 
                 date=today, 
                 defaults={'active': True}
@@ -74,7 +73,7 @@ class CinemaArrangeSlot(models.Model):
             current_date = today
             for _ in range(2):
                 current_date += datetime.timedelta(days=1)
-                Available_Slots.objects.get_or_create(
+                AvailableSlots.objects.get_or_create(
                     slot=slot, 
                     date=current_date, 
                     defaults={'active': True}
@@ -83,8 +82,8 @@ class CinemaArrangeSlot(models.Model):
     # --- CORREÇÃO: Redução Drástica de Loops Aninhados e ifs ---
     def seat_maker(self):
         decks = CinemaDeck.objects.filter(active=True)
-        managers = seat_manager.objects.all()
-        active_slots = Available_Slots.objects.filter(active=True)
+        managers = SeatManager.objects.all()
+        active_slots = AvailableSlots.objects.filter(active=True)
 
         for deck in decks:
             for manager in managers:
@@ -106,7 +105,7 @@ class CinemaArrangeSlot(models.Model):
         yesterday_limit = datetime.datetime.now() - datetime.timedelta(days=1)
         
         # Considerando que 'date' em Available_Slots é um DateField
-        expired_slots = Available_Slots.objects.filter(
+        expired_slots = AvailableSlots.objects.filter(
             date__lt=yesterday_limit.date(), 
             active=True
         )

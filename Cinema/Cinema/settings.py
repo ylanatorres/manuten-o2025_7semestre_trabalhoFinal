@@ -20,7 +20,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-change-me-plea
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = []
-
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -32,12 +32,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_auth',
+    'dj_rest_auth',
     'allauth',
     'phone_field',
     'allauth.account',
+    'allauth.socialaccount',
     'localflavor',
-    'rest_auth.registration',
+    'dj_rest_auth.registration',
     'user',
     'employee',
     'managecinema',
@@ -59,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'Cinema.urls'
@@ -149,3 +151,11 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'seu_email_padrao@gmail.com'
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'senha_insegura_padrao') 
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
+
+import os
+
+# URL para acessar as imagens no navegador
+MEDIA_URL = '/media/'
+
+# Pasta física no computador onde os arquivos ficam
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

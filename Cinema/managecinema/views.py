@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
 
 # Imports
-from cinema_booking.models import Seat, Available_Slots
+from cinema_booking.models import Seat, AvailableSlots
 from .models import Cinema, CinemaDeck, MovieDurationSlot, CinemaArrangeSlot
 from .serializers import (
     CinemaSerializer,
@@ -181,3 +181,12 @@ class CinemaArrangeSlotViewsets(BaseCinemaViewSet):
                 serializer.save()
                 return Response(serializer.data, status=200)
         return Response({"error": ACCESS_DENIED_MSG}, status=401)
+    
+
+from django.shortcuts import render
+from .models import Cinema  # Importando o modelo de Cinema/Filmes
+
+def home(request):
+    # Pega todos os cinemas (filmes) cadastrados
+    movies = Cinema.objects.all()
+    return render(request, 'home.html', {'movies': movies})

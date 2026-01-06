@@ -15,32 +15,49 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from drf_yasg.views import get_schema_view
 from rest_framework import permissions
+from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from django.conf import settings
+from django.conf.urls.static import static
 
 schema_view = get_schema_view(
-    openapi.Info(
-        title="CINEMA API",
-        default_version='v1',
-        description="List of API",
-        terms_of_service="https://www.ourapp.com/policies/terms/",
-        contact=openapi.Contact(email="saitwalsamir@gmail.com"),
-        license=openapi.License(name="Test License"),
-    ),
-    public=True,
-    permission_classes=(permissions.AllowAny,),
+   openapi.Info(
+      title="Cinema API",
+      default_version='v1',
+      description="Documentação da API do Sistema de Cinema",
+      terms_of_service="https://www.google.com/policies/terms/",
+      contact=openapi.Contact(email="contact@snippets.local"),
+      license=openapi.License(name="BSD License"),
+   ),
+   public=True,
+   permission_classes=(permissions.AllowAny,),
 )
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', schema_view.with_ui('swagger',
-                                 cache_timeout=0), name='schema-swagger-ui'),
-    path('rest-auth/', include('rest_auth.urls')),
-    path('rest-auth/registration/', include('rest_auth.registration.urls')),
-    path('managecinema/', include('managecinema.urls')),
-    path('cinema_booking/', include('cinema_booking.urls')),
-    path('employee/', include('employee.urls')),
-    path('notification/', include('cinema_notification.urls')),
-    path('cinema_review/', include('cinema_feedback.urls'))
+    path('api/v1/managecinema/', include('managecinema.urls')),
+    path('api/v1/user/', include('user.urls')),
+    path('admin/', admin.site.urls),
 
+    #agrupamento de todos os apps dentro de 'api/v1/'
+    path('api/v1/', include([
+        path('auth/', include('dj_rest_auth.urls')),
+        path('auth/registration/', include('dj_rest_auth.registration.urls')),
+        
+        # Seus Apps
+        path('user/', include('user.urls')),
+        path('employee/', include('employee.urls')),
+        path('managecinema/', include('managecinema.urls')),
+        path('booking/', include('cinema_booking.urls')),
+        path('notification/', include('cinema_notification.urls')),
+        path('feedback/', include('cinema_feedback.urls')),
+    ])),
+
+    # rotas da Documentação 
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

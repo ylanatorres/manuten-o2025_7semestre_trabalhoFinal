@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketCine - Home</title>
+    <style>
+        /* == ESTILO BASEADO NO PROTÓTIPO == */
+        body {
+            background-color: #0f172a; /* Azul bem escuro de fundo */
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header / Menu Superior */
+        header {
+            background-color: #1e293b; /* Azul um pouco mais claro */
+            padding: 15px 40px;
+            display: flex;
+            justify_content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #38bdf8; /* Azul cyan do logo */
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-bar {
+            background-color: #334155;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            width: 300px;
+        }
+
+        /* Grid de Filmes */
+        .container {
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h2 {
+            border-left: 5px solid #38bdf8;
+            padding-left: 15px;
+            margin-bottom: 30px;
+        }
+
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 30px;
+        }
+
+        /* Card do Filme */
+        .movie-card {
+            background-color: #1e293b;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-10px); /* Efeito de subir ao passar o mouse */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        .movie-poster {
+            width: 100%;
+            height: 300px;
+            background-color: #334155; /* Cor cinza caso não tenha imagem */
+            object-fit: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+        }
+
+        .movie-info {
+            padding: 15px;
+        }
+
+        .movie-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn-comprar {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #38bdf8;
+            color: #0f172a;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .btn-comprar:hover {
+            background-color: #0ea5e9;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            🎬 TICKETCINE
+        </div>
+        <input type="text" class="search-bar" placeholder="Pesquisar filme...">
+        <div>
+            <span>Olá, Visitante</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <h2>Filmes em Cartaz</h2>
+
+        <div class="movie-grid">
+            {% for movie in movies %}
+            <div class="movie-card">
+                {% if movie.image %}
+                    <img src="{{ movie.image.url }}" class="movie-poster" alt="{{ movie.movie_name }}">
+                {% else %}
+                    <div class="movie-poster">Sem Imagem</div>
+                {% endif %}
+
+                <div class="movie-info">
+                    <h3 class="movie-title">{{ movie.movie_name }}</h3>
+                    <p style="color: #94a3b8; font-size: 0.9rem;">{{ movie.description|truncatechars:50 }}</p>
+                    <a href="#" class="btn-comprar">COMPRAR INGRESSO</a>
+                </div>
+            </div>
+            {% empty %}
+                <p>Nenhum filme cadastrado no momento.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+</body>
+</html>

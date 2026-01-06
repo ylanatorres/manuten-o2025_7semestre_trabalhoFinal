@@ -1,12 +1,11 @@
-from rest_framework import viewsets, generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
-from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.exceptions import PermissionDenied
 from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime
 
-# --- CORREÇÃO DE IMPORTS (Removemos o '*') ---
+# Seus Imports
 from cinema_notification.models import Notification
 from managecinema.models import CinemaArrangeSlot, CinemaDeck, Cinema
 from .models import AvailableSlots, Seat, BookSeat, SeatManager
@@ -17,45 +16,52 @@ from .serializers import (
     SeatManagerSerializer
 )
 
-# --- CONSTANTES GLOBAIS (Resolve duplicidade de strings) ---
+# Constantes
 ACCESS_DENIED_MSG = "Access Denied"
 DOES_NOT_EXIST_MSG = "Does not exist"
 
-class AvailableSlotsViewsets(generics.ListAPIView):
+# --- MUDANÇA PRINCIPAL 1: Herdar de ReadOnlyModelViewSet ---
+# Antes era generics.ListAPIView (que quebra o Router). 
+# Agora é ViewSet, mas ReadOnly (apenas leitura/listagem), que é o que o ListAPIView fazia.
+class AvailableSlotsViewsets(viewsets.ReadOnlyModelViewSet):
     queryset = AvailableSlots.objects.all().order_by('-date')
     serializer_class = AvailableSlotsReadSerializer
-    filter_backends = [SearchFilter, ]
+    filter_backends = [SearchFilter]
     search_fields = ['date']
+    permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
+        queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=200)
 
 
-class SeatsList(generics.ListAPIView):
+# --- MUDANÇA PRINCIPAL 2: Transformar SeatsList em ViewSet ---
+# Se você tiver uma rota para isso no router, precisa ser ViewSet também.
+class SeatsViewsets(viewsets.ReadOnlyModelViewSet):
     queryset = Seat.objects.all().order_by('-date')
-    filter_backends = [SearchFilter, ]
+    serializer_class = SeatSerializer
+    filter_backends = [SearchFilter]
     search_fields = ['name', 'deck__deck_name', 'date']
+    permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
+        queryset = self.filter_queryset(self.get_queryset())
         
+        # Sua lógica personalizada de atualização
         CinemaArrangeSlot.slot_updater(self=self)
         CinemaArrangeSlot.slot_maker(self=self)
         CinemaArrangeSlot.seat_maker(self=self)
         Seat.seat_updater(self=self)
         
-        serializer = SeatSerializer(queryset, many=True)
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=200)
 
 
 class BookSeatsViewsets(viewsets.ModelViewSet):
     queryset = BookSeat.objects.all().order_by('-created_at')
     serializer_class = BookSeatSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,)
     lookup_field = "id"
 
     def get_queryset(self):
@@ -95,7 +101,6 @@ class BookSeatsViewsets(viewsets.ModelViewSet):
                     )
                     return Response(serializer.data, status=200)
                 
-                # CORREÇÃO: Captura APENAS erros de objeto não encontrado (evita erro S5754)
                 except ObjectDoesNotExist:
                      return Response({"ERROR": DOES_NOT_EXIST_MSG}, status=400)
             else:
@@ -108,7 +113,6 @@ class BookSeatsViewsets(viewsets.ModelViewSet):
                 instance = self.get_object()
                 serializer = self.get_serializer(instance)
                 return Response(serializer.data, status=200)
-            # CORREÇÃO: Captura explícita
             except ObjectDoesNotExist:
                 return Response({"DOES_NOT_EXIST": DOES_NOT_EXIST_MSG}, status=400)
         else:
@@ -121,9 +125,6 @@ class BookSeatsViewsets(viewsets.ModelViewSet):
             raise PermissionDenied(ACCESS_DENIED_MSG)
 
     def perform_destroy(self, instance):
-        # CORREÇÃO: Removida lógica redundante.
-        # O Django já encontrou o 'instance' para você. Não precisa buscar de novo com .get().
-        # Ao remover o try/except desnecessário, o erro do Sonar desaparece.
         if self.request.user.is_admin or self.request.user.is_employee:
             instance.delete()
         else:
@@ -133,7 +134,7 @@ class BookSeatsViewsets(viewsets.ModelViewSet):
 class SeatManagerViewsets(viewsets.ModelViewSet):
     queryset = SeatManager.objects.all().order_by('-created_at')
     serializer_class = SeatManagerSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,)
     lookup_field = "id"
 
     def get_queryset(self):
