@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
 
-# --- CORREÇÃO DO SONAR: Imports explícitos (Fim do import *) ---
+# --- CORREÇÃO: Imports explícitos (Resolvendo "Import only needed names") ---
 from cinema_booking.models import Seat, Available_Slots
 from .models import Cinema, CinemaDeck, MovieDurationSlot, CinemaArrangeSlot
 from .serializers import (
@@ -15,7 +15,7 @@ from .serializers import (
     CinemaArrangeSlotWriteSerializer
 )
 
-# --- CORREÇÃO DO SONAR: Constantes para evitar duplicação de strings ---
+# --- CORREÇÃO: Constantes (Resolvendo "String literals should not be duplicated") ---
 ACCESS_DENIED_MSG = "Access Denied"
 DOES_NOT_EXIST_MSG = "Does not exist"
 ACCESS_GRANTED_MSG = "Access Granted"
@@ -171,7 +171,6 @@ class CinemaArrangeSlotViewsets(viewsets.ModelViewSet):
             if serializer.is_valid(raise_exception=True):
                 data = serializer.save(active=True)
                 
-                # Lógica de cálculo de tempo
                 try:
                     query = MovieDurationSlot.objects.get(id=(request.data.get('duration_slot')))
                     get_query = CinemaArrangeSlot.objects.get(id=data.id)
@@ -183,7 +182,7 @@ class CinemaArrangeSlotViewsets(viewsets.ModelViewSet):
                     get_query.save()
                     
                     if data:
-                        # Chamada dos métodos do Model (mantendo a lógica original)
+                        # Mantendo a lógica original do projeto
                         CinemaArrangeSlot.slot_updater(self=self)
                         CinemaArrangeSlot.slot_maker(self=self)
                         CinemaArrangeSlot.seat_maker(self=self)
