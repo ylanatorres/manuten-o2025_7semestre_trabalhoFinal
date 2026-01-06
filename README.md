@@ -150,3 +150,4 @@ The project will be available at http://127.0.0.1:8000/
 <a href="#"><img alt="Pycharm" src="https://miro.medium.com/max/512/1*fVBL9mtLJmHIH6YpU7WvHQ.png" width=100></a>
 
 
+# Atualização de segurança.
