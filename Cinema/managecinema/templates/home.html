@@ -19,7 +19,7 @@
             background-color: #1e293b; /* Azul um pouco mais claro */
             padding: 15px 40px;
             display: flex;
-            justify_content: space-between;
+            justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
         }
@@ -123,8 +123,14 @@
             🎬 TICKETCINE
         </div>
         <input type="text" class="search-bar" placeholder="Pesquisar filme...">
-        <div>
-            <span>Olá, Visitante</span>
+        
+        <div style="display: flex; gap: 15px; align-items: center;">
+            {% if user.is_authenticated %}
+                <span>Olá, <strong>{{ user.username }}</strong></span>
+                <a href="{% url 'logout' %}" style="color: #ef4444; text-decoration: none; font-size: 0.9rem;">Sair</a>
+            {% else %}
+                <a href="{% url 'login' %}" style="color: #38bdf8; text-decoration: none; font-weight: bold;">Login</a>
+            {% endif %}
         </div>
     </header>
 
@@ -143,7 +149,7 @@
                 <div class="movie-info">
                     <h3 class="movie-title">{{ movie.movie_name }}</h3>
                     <p style="color: #94a3b8; font-size: 0.9rem;">{{ movie.description|truncatechars:50 }}</p>
-                    <a href="#" class="btn-comprar">COMPRAR INGRESSO</a>
+                    <a href="{% url 'movie_detail' movie.id %}" class="btn-comprar">COMPRAR INGRESSO</a>
                 </div>
             </div>
             {% empty %}

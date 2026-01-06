@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Escolha seus Assentos - TicketCine</title>
+    <style>
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; }
+        
+        h2 { color: #38bdf8; margin-bottom: 5px; }
+        p { color: #94a3b8; margin-top: 0; }
+
+        /* A TELA DO CINEMA */
+        .screen {
+            background-color: #fff;
+            height: 70px;
+            width: 100%;
+            max-width: 400px;
+            margin: 20px 0;
+            box-shadow: 0 3px 10px rgba(255,255,255,0.7);
+            transform: rotateX(-45deg); /* Efeito 3D inclinado */
+            border-radius: 10px;
+        }
+
+        /* LEGENDA */
+        .legend { display: flex; gap: 20px; margin-bottom: 20px; background: #1e293b; padding: 10px 20px; border-radius: 8px; }
+        .legend div { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .dot { width: 15px; height: 15px; border-radius: 5px; }
+        .dot.free { background-color: #334155; }
+        .dot.selected { background-color: #38bdf8; }
+        .dot.occupied { background-color: #ef4444; }
+
+        /* GRADE DE CADEIRAS */
+        .container { perspective: 1000px; margin-bottom: 30px; }
+        .seat-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; width: fit-content; margin: 0 auto; }
+
+        .seat {
+            width: 30px;
+            height: 30px;
+            background-color: #334155; /* Cor Livre */
+            border-radius: 5px 5px 0 0; /* Formato de cadeira */
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .seat:hover:not(.occupied) { transform: scale(1.2); }
+        
+        .seat.selected { background-color: #38bdf8; box-shadow: 0 0 10px #38bdf8; }
+        
+        .seat.occupied { background-color: #ef4444; cursor: not-allowed; }
+
+        /* BARRA DE TOTAL */
+        .summary-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #1e293b; padding: 20px;
+            display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid #334155;
+        }
+        .total-price { font-size: 1.5rem; font-weight: bold; color: #38bdf8; }
+        
+        .btn-finish {
+            background-color: #38bdf8; color: #0f172a;
+            padding: 12px 30px; border: none; border-radius: 8px;
+            font-weight: bold; font-size: 1rem; cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-finish:disabled { background-color: #64748b; cursor: not-allowed; }
+
+    </style>
+</head>
+<body>
+
+    <h2>{{ movie.movie_name }}</h2>
+    <p>Sessão das {{ time }}</p>
+
+    <div class="legend">
+        <div><div class="dot free"></div> Livre</div>
+        <div><div class="dot selected"></div> Selecionado</div>
+        <div><div class="dot occupied"></div> Ocupado</div>
+    </div>
+
+    <div class="container">
+        <div class="screen"></div>
+        
+        <div class="seat-grid">
+            <div class="seat" data-seat="A1"></div>
+            <div class="seat" data-seat="A2"></div>
+            <div class="seat" data-seat="A3"></div>
+            <div class="seat occupied"></div> <div class="seat occupied"></div>
+            <div class="seat" data-seat="A6"></div>
+            <div class="seat" data-seat="A7"></div>
+            <div class="seat" data-seat="A8"></div>
+
+            <div class="seat" data-seat="B1"></div>
+            <div class="seat" data-seat="B2"></div>
+            <div class="seat" data-seat="B3"></div>
+            <div class="seat" data-seat="B4"></div>
+            <div class="seat" data-seat="B5"></div>
+            <div class="seat" data-seat="B6"></div>
+            <div class="seat" data-seat="B7"></div>
+            <div class="seat" data-seat="B8"></div>
+
+            <div class="seat" data-seat="C1"></div>
+            <div class="seat" data-seat="C2"></div>
+            <div class="seat" data-seat="C3"></div>
+            <div class="seat" data-seat="C4"></div>
+            <div class="seat" data-seat="C5"></div>
+            <div class="seat" data-seat="C6"></div>
+            <div class="seat" data-seat="C7"></div>
+            <div class="seat" data-seat="C8"></div>
+        </div>
+    </div>
+
+    <div class="summary-bar">
+        <div>
+            <div style="font-size: 0.9rem; color: #94a3b8;">Selecionados: <span id="count">0</span></div>
+            <div class="total-price">R$ <span id="total">0,00</span></div>
+        </div>
+        <button id="btn-checkout" class="btn-finish" disabled>
+            FINALIZAR COMPRA
+        </button>
+    </div>
+
+    <script>
+        const container = document.querySelector('.seat-grid');
+        const seats = document.querySelectorAll('.seat:not(.occupied)');
+        const count = document.getElementById('count');
+        const total = document.getElementById('total');
+        const btnCheckout = document.getElementById('btn-checkout');
+        
+        const ticketPrice = {{ price }}; // Pega o preço vindo do Python
+
+        // Função para atualizar totais
+        function updateSelectedCount() {
+            const selectedSeats = document.querySelectorAll('.seat.selected');
+            const selectedSeatsCount = selectedSeats.length;
+
+            count.innerText = selectedSeatsCount;
+            total.innerText = (selectedSeatsCount * ticketPrice).toFixed(2).replace('.', ',');
+
+            // Habilita ou desabilita o botão
+            if (selectedSeatsCount > 0) {
+                btnCheckout.disabled = false;
+            } else {
+                btnCheckout.disabled = true;
+            }
+        }
+
+        // Evento de Clique na Cadeira
+        container.addEventListener('click', (e) => {
+            if (e.target.classList.contains('seat') && !e.target.classList.contains('occupied')) {
+                e.target.classList.toggle('selected');
+                updateSelectedCount();
+            }
+        });
+
+        // --- NOVA LÓGICA DO BOTÃO FINALIZAR ---
+        btnCheckout.addEventListener('click', () => {
+            // 1. Pega quais cadeiras estão selecionadas
+            const selectedSeatsElements = document.querySelectorAll('.seat.selected');
+            const selectedSeatsArray = [];
+            
+            selectedSeatsElements.forEach(seat => {
+                selectedSeatsArray.push(seat.getAttribute('data-seat'));
+            });
+
+            // Transforma em texto (Ex: "A1,A2")
+            const seatsString = selectedSeatsArray.join(',');
+            
+            // Pega o valor total
+            const totalValue = total.innerText;
+
+            // Dados vindos do Django
+            const movieId = "{{ movie.id }}";
+            const time = "{{ time }}";
+            
+            // 2. Redireciona para a página de sucesso
+            // Usa a tag 'url' do Django para garantir que o link esteja certo
+            window.location.href = `{% url 'booking_finish' %}?movie_id=${movieId}&time=${time}&seats=${seatsString}&total=${totalValue}`;
+        });
+    </script>
+</body>
+</html>

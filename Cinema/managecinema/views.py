@@ -190,3 +190,46 @@ def home(request):
     # Pega todos os cinemas (filmes) cadastrados
     movies = Cinema.objects.all()
     return render(request, 'home.html', {'movies': movies})
+
+
+from django.shortcuts import render, get_object_or_404
+# Mantenha os outros imports (Cinema, etc)
+
+def movie_detail(request, movie_id):
+    # Busca o filme pelo ID ou dá Erro 404 se não existir
+    movie = get_object_or_404(Cinema, id=movie_id)
+    
+    # Simulação de horários (Para o protótipo não precisar cadastrar sessões agora)
+    # Na vida real, viria do banco de dados (tabela Sessions)
+    sessions = ['14:00', '16:30', '19:00', '21:30']
+    
+    return render(request, 'movie_detail.html', {'movie': movie, 'sessions': sessions})
+
+def seat_selection(request, movie_id, session_time):
+    movie = get_object_or_404(Cinema, id=movie_id)
+    
+    # Preço do ingresso (fixo para o protótipo)
+    ticket_price = 25.00
+    
+    return render(request, 'seat_selection.html', {
+        'movie': movie, 
+        'time': session_time,
+        'price': ticket_price
+    })
+    
+def booking_finish(request):
+    # Pega os dados que vieram na URL
+    movie_id = request.GET.get('movie_id')
+    session_time = request.GET.get('time')
+    seats = request.GET.get('seats') # Ex: "A1,A2"
+    total = request.GET.get('total')
+    
+    movie = get_object_or_404(Cinema, id=movie_id)
+    
+    return render(request, 'ticket_confirmation.html', {
+        'movie': movie,
+        'time': session_time,
+        'seats': seats,
+        'total': total,
+        'user': request.user
+    })

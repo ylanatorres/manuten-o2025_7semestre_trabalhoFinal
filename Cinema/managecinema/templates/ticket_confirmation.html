@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Compra Confirmada!</title>
+    <style>
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        
+        h1 { color: #4ade80; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+        
+        /* O BILHETE */
+        .ticket {
+            background-color: #1e293b;
+            width: 350px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        /* Topo do Bilhete (Imagem) */
+        .ticket-header {
+            height: 150px;
+            background-color: #334155;
+            background-image: url('{{ movie.image.url }}');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .ticket-header::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 50%;
+            background: linear-gradient(to top, #1e293b, transparent);
+        }
+
+        /* Corpo do Bilhete */
+        .ticket-body { padding: 25px; text-align: center; }
+        
+        .movie-title { font-size: 1.5rem; font-weight: bold; margin: 0 0 5px 0; color: #38bdf8; }
+        .session-info { color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; }
+        
+        .divider { border-top: 2px dashed #334155; margin: 20px 0; position: relative; }
+        .divider::before, .divider::after {
+            content: ''; position: absolute; top: -10px; width: 20px; height: 20px; background-color: #0f172a; border-radius: 50%;
+        }
+        .divider::before { left: -35px; }
+        .divider::after { right: -35px; }
+
+        /* Detalhes da Compra */
+        .details-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
+        .label { color: #94a3b8; }
+        .value { font-weight: bold; }
+
+        /* QR Code Simulado */
+        .qrcode {
+            margin-top: 20px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        
+        .btn-home {
+            margin-top: 30px;
+            color: #94a3b8;
+            text-decoration: none;
+            border: 1px solid #334155;
+            padding: 10px 20px;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+        .btn-home:hover { background-color: #334155; color: white; }
+
+    </style>
+</head>
+<body>
+
+    <h1>✅ Pagamento Aprovado!</h1>
+
+    <div class="ticket">
+        <div class="ticket-header"></div>
+        
+        <div class="ticket-body">
+            <h2 class="movie-title">{{ movie.movie_name }}</h2>
+            <div class="session-info">Cinema Mall • Sala 03</div>
+            
+            <div class="divider"></div>
+
+            <div class="details-row">
+                <span class="label">Data/Hora</span>
+                <span class="value">{{ time }}</span>
+            </div>
+            <div class="details-row">
+                <span class="label">Assentos</span>
+                <span class="value" style="color: #4ade80;">{{ seats }}</span>
+            </div>
+            <div class="details-row">
+                <span class="label">Cliente</span>
+                <span class="value">{{ user.username }}</span>
+            </div>
+            <div class="details-row">
+                <span class="label">Total Pago</span>
+                <span class="value">R$ {{ total }}</span>
+            </div>
+
+            <div class="qrcode">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=TicketCine-{{ user.username }}-{{ movie.id }}" alt="QR Code">
+            </div>
+            <p style="font-size: 0.8rem; color: #64748b; margin-top: 10px;">Apresente este código na entrada.</p>
+        </div>
+    </div>
+
+    <a href="{% url 'home' %}" class="btn-home">Voltar para Início</a>
+
+</body>
+</html>

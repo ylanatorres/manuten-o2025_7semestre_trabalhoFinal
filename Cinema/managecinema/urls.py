@@ -21,4 +21,7 @@ router.register('cinema_arrange_slot', CinemaArrangeSlotViewsets, 'cinema_arrang
 urlpatterns = [
     path(r'', include(router.urls)),
     path('home/', views.home, name='home'),
+    path('movie/<int:movie_id>/', views.movie_detail, name='movie_detail'),
+    path('booking/<int:movie_id>/<str:session_time>/', views.seat_selection, name='seat_selection'),
+    path('booking/finish/', views.booking_finish, name='booking_finish'),
 ]

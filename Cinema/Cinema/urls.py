@@ -20,6 +20,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.conf import settings
 from django.conf.urls.static import static
+from user import views as user_views 
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -39,6 +40,9 @@ urlpatterns = [
     path('api/v1/managecinema/', include('managecinema.urls')),
     path('api/v1/user/', include('user.urls')),
     path('admin/', admin.site.urls),
+    path('register/', user_views.register_view, name='register'),
+    path('login/', user_views.login_view, name='login'),
+    path('logout/', user_views.logout_view, name='logout'),
 
     #agrupamento de todos os apps dentro de 'api/v1/'
     path('api/v1/', include([
