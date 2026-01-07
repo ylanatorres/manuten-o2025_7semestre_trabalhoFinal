@@ -9,7 +9,7 @@
         h2 { color: #38bdf8; margin-bottom: 5px; }
         p { color: #94a3b8; margin-top: 0; }
 
-        /* A TELA DO CINEMA */
+        
         .screen {
             background-color: #fff;
             height: 70px;
@@ -17,11 +17,11 @@
             max-width: 400px;
             margin: 20px 0;
             box-shadow: 0 3px 10px rgba(255,255,255,0.7);
-            transform: rotateX(-45deg); /* Efeito 3D inclinado */
+            transform: rotateX(-45deg); 
             border-radius: 10px;
         }
 
-        /* LEGENDA */
+       
         .legend { display: flex; gap: 20px; margin-bottom: 20px; background: #1e293b; padding: 10px 20px; border-radius: 8px; }
         .legend div { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
         .dot { width: 15px; height: 15px; border-radius: 5px; }
@@ -29,15 +29,15 @@
         .dot.selected { background-color: #38bdf8; }
         .dot.occupied { background-color: #ef4444; }
 
-        /* GRADE DE CADEIRAS */
+        
         .container { perspective: 1000px; margin-bottom: 30px; }
         .seat-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; width: fit-content; margin: 0 auto; }
 
         .seat {
             width: 30px;
             height: 30px;
-            background-color: #334155; /* Cor Livre */
-            border-radius: 5px 5px 0 0; /* Formato de cadeira */
+            background-color: #334155;
+            border-radius: 5px 5px 0 0; 
             cursor: pointer;
             transition: 0.2s;
         }
@@ -48,7 +48,7 @@
         
         .seat.occupied { background-color: #ef4444; cursor: not-allowed; }
 
-        /* BARRA DE TOTAL */
+        
         .summary-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background-color: #1e293b; padding: 20px;
