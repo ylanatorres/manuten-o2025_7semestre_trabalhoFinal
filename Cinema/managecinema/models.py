@@ -2,7 +2,6 @@ import datetime
 from django.db import models
 from djmoney.models.fields import MoneyField
 
-# Imports dos modelos externos
 from cinema_booking.models import AvailableSlots, SeatManager, Seat
 class Cinema(models.Model):
     image = models.ImageField(upload_to='movies/', blank=True, null=True)
@@ -55,21 +54,17 @@ class CinemaArrangeSlot(models.Model):
     def __str__(self):
         return "{}-{}".format(self.cinema, self.start_time)
 
-    # --- CORREÇÃO: Redução de Complexidade Cognitiva ---
     def slot_maker(self):
-        # Busca slots existentes
         slots = CinemaArrangeSlot.objects.all()
         today = datetime.date.today()
         
         for slot in slots:
-            # Cria para hoje (se não existir)
             AvailableSlots.objects.get_or_create(
                 slot=slot, 
                 date=today, 
                 defaults={'active': True}
             )
             
-            # Cria para os próximos 2 dias
             current_date = today
             for _ in range(2):
                 current_date += datetime.timedelta(days=1)
@@ -79,7 +74,6 @@ class CinemaArrangeSlot(models.Model):
                     defaults={'active': True}
                 )
 
-    # --- CORREÇÃO: Redução Drástica de Loops Aninhados e ifs ---
     def seat_maker(self):
         decks = CinemaDeck.objects.filter(active=True)
         managers = SeatManager.objects.all()
@@ -89,8 +83,7 @@ class CinemaArrangeSlot(models.Model):
             for manager in managers:
                 for slot in active_slots:
                     for name_idx in range(0, 2):
-                        # get_or_create substitui toda aquela lógica de "if not exists: create else: pass"
-                        # Isso resolve o erro de complexidade do SonarCloud
+                        
                         Seat.objects.get_or_create(
                             name=name_idx,
                             deck=deck,
@@ -100,15 +93,12 @@ class CinemaArrangeSlot(models.Model):
                         )
 
     def slot_updater(self):
-        # Lógica otimizada: Filtra apenas os slots antigos e desativa
-        # Isso evita loops desnecessários e try/except vazios
+        
         yesterday_limit = datetime.datetime.now() - datetime.timedelta(days=1)
         
-        # Considerando que 'date' em Available_Slots é um DateField
         expired_slots = AvailableSlots.objects.filter(
             date__lt=yesterday_limit.date(), 
             active=True
         )
         
-        # Atualização em massa é mais eficiente
         expired_slots.update(active=False)

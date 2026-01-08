@@ -129,7 +129,7 @@
         
         const ticketPrice = {{ price }};
 
-        // Função para atualizar totais
+        // atualizar totais
         function updateSelectedCount() {
             const selectedSeats = document.querySelectorAll('.seat.selected');
             const selectedSeatsCount = selectedSeats.length;
@@ -153,7 +153,6 @@
             }
         });
 
-        // --- NOVA LÓGICA DO BOTÃO FINALIZAR ---
         btnCheckout.addEventListener('click', () => {
             // 1. Pega quais cadeiras estão selecionadas
             const selectedSeatsElements = document.querySelectorAll('.seat.selected');
@@ -173,8 +172,7 @@
             const movieId = "{{ movie.id }}";
             const time = "{{ time }}";
             
-            // 2. Redireciona para a página de sucesso
-            // Usa a tag 'url' do Django para garantir que o link esteja certo
+            
             window.location.href = `{% url 'booking_finish' %}?movie_id=${movieId}&time=${time}&seats=${seatsString}&total=${totalValue}`;
         });
     </script>
