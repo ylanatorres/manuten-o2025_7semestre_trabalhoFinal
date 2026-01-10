@@ -1,6 +1,5 @@
 from rest_framework import routers
 from django.urls import path, include
-# CORREÇÃO: Importar explicitamente
 from .views import CreateEmployee
 
 router = routers.DefaultRouter()

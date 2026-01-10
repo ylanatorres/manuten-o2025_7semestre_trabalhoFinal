@@ -1,6 +1,5 @@
 from rest_framework import routers
 from django.urls import path, include
-# CORREÇÃO: Importar explicitamente as Views usadas nas URLs
 from .views import NotificationListView, UnreadNotificationCount
 
 urlpatterns = [

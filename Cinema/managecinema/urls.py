@@ -4,7 +4,6 @@ from rest_framework.routers import DefaultRouter
 from rest_framework import routers
 from django.urls import path, include
 
-# --- CORREÇÃO DO SONAR: Importar explicitamente as Viewsets usadas ---
 from .views import (
     CinemaViewsets, 
     CinemaDeckViewsets, 
