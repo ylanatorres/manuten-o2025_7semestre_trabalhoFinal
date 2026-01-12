@@ -3,7 +3,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from managecinema.models import Cinema
 
-# --- CORREÇÃO: Importar nomes exatos ao invés de '*' ---
 from .models import Review
 from .serializers import ReviewSerializer
 
@@ -22,13 +21,12 @@ class ReviewViewsets(generics.ListCreateAPIView):
         if serializer.is_valid(raise_exception=True):
             data = serializer.save()
             
-            # Verificação de segurança ao buscar o filme
             movie_id = request.data.get('movie')
             if movie_id:
                 try:
                     cinema_query = Cinema.objects.get(id=movie_id)
                     cinema_query.all_review.add(data.id)
                 except Cinema.DoesNotExist:
-                    pass # Se o filme não existir, não quebra o código
+                    pass 
                     
         return Response(serializer.data, status=200)

@@ -5,7 +5,6 @@ from rest_framework.exceptions import PermissionDenied
 from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime
 
-# Seus Imports
 from cinema_notification.models import Notification
 from managecinema.models import CinemaArrangeSlot, CinemaDeck, Cinema
 from .models import AvailableSlots, Seat, BookSeat, SeatManager
@@ -16,13 +15,10 @@ from .serializers import (
     SeatManagerSerializer
 )
 
-# Constantes
 ACCESS_DENIED_MSG = "Access Denied"
 DOES_NOT_EXIST_MSG = "Does not exist"
 
-# --- MUDANÇA PRINCIPAL 1: Herdar de ReadOnlyModelViewSet ---
-# Antes era generics.ListAPIView (que quebra o Router). 
-# Agora é ViewSet, mas ReadOnly (apenas leitura/listagem), que é o que o ListAPIView fazia.
+
 class AvailableSlotsViewsets(viewsets.ReadOnlyModelViewSet):
     queryset = AvailableSlots.objects.all().order_by('-date')
     serializer_class = AvailableSlotsReadSerializer
@@ -36,8 +32,7 @@ class AvailableSlotsViewsets(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data, status=200)
 
 
-# --- MUDANÇA PRINCIPAL 2: Transformar SeatsList em ViewSet ---
-# Se você tiver uma rota para isso no router, precisa ser ViewSet também.
+
 class SeatsViewsets(viewsets.ReadOnlyModelViewSet):
     queryset = Seat.objects.all().order_by('-date')
     serializer_class = SeatSerializer
@@ -48,7 +43,6 @@ class SeatsViewsets(viewsets.ReadOnlyModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         
-        # Sua lógica personalizada de atualização
         CinemaArrangeSlot.slot_updater(self=self)
         CinemaArrangeSlot.slot_maker(self=self)
         CinemaArrangeSlot.seat_maker(self=self)
@@ -102,7 +96,7 @@ class BookSeatsViewsets(viewsets.ModelViewSet):
                     return Response(serializer.data, status=200)
                 
                 except ObjectDoesNotExist:
-                     return Response({"ERROR": DOES_NOT_EXIST_MSG}, status=400)
+                    return Response({"ERROR": DOES_NOT_EXIST_MSG}, status=400)
             else:
                 return Response({"NO_ACCESS": ACCESS_DENIED_MSG}, status=401)
         return Response(serializer.errors, status=400)

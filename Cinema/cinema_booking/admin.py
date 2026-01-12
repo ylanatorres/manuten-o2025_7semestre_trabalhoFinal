@@ -1,5 +1,4 @@
 from django.contrib import admin
-# Substituímos o '*' pelos nomes específicos das classes
 from .models import AvailableSlots, Seat, SeatManager, BookSeat
 # Register your models here.
 admin.site.register(AvailableSlots) 

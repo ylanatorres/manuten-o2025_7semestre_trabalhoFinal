@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
 
-# Imports
 from cinema_booking.models import Seat, AvailableSlots
 from .models import Cinema, CinemaDeck, MovieDurationSlot, CinemaArrangeSlot
 from .serializers import (
@@ -15,12 +14,10 @@ from .serializers import (
     CinemaArrangeSlotWriteSerializer
 )
 
-# Constantes
 ACCESS_DENIED_MSG = "Access Denied"
 DOES_NOT_EXIST_MSG = "Does not exist"
 ACCESS_GRANTED_MSG = "Access Granted"
 
-# --- CLASSE PAI (Resolve a Duplicação) ---
 class BaseCinemaViewSet(viewsets.ModelViewSet):
     """
     Classe base que contém a lógica repetida de 'destroy' e permissões.
@@ -33,9 +30,7 @@ class BaseCinemaViewSet(viewsets.ModelViewSet):
         return self.request.user.is_admin or self.request.user.is_employee
 
     def destroy(self, request, *args, **kwargs):
-        # Lógica genérica que serve para todos os Models
         try:
-            # Busca o objeto usando o queryset da classe filha
             instance = self.get_queryset().get(id=self.kwargs["id"])
         except ObjectDoesNotExist:
             return Response({"DOES_NOT_EXIST": DOES_NOT_EXIST_MSG}, status=400)
@@ -46,7 +41,6 @@ class BaseCinemaViewSet(viewsets.ModelViewSet):
         else:
             return Response({"error": ACCESS_DENIED_MSG}, status=401)
 
-# --- CLASSES FILHAS (Limpas e sem repetição) ---
 
 class CinemaViewsets(BaseCinemaViewSet):
     queryset = Cinema.objects.all()
@@ -184,23 +178,19 @@ class CinemaArrangeSlotViewsets(BaseCinemaViewSet):
     
 
 from django.shortcuts import render
-from .models import Cinema  # Importando o modelo de Cinema/Filmes
+from .models import Cinema  
 
 def home(request):
-    # Pega todos os cinemas (filmes) cadastrados
     movies = Cinema.objects.all()
     return render(request, 'home.html', {'movies': movies})
 
 
 from django.shortcuts import render, get_object_or_404
-# Mantenha os outros imports (Cinema, etc)
 
 def movie_detail(request, movie_id):
-    # Busca o filme pelo ID ou dá Erro 404 se não existir
     movie = get_object_or_404(Cinema, id=movie_id)
     
-    # Simulação de horários (Para o protótipo não precisar cadastrar sessões agora)
-    # Na vida real, viria do banco de dados (tabela Sessions)
+
     sessions = ['14:00', '16:30', '19:00', '21:30']
     
     return render(request, 'movie_detail.html', {'movie': movie, 'sessions': sessions})
@@ -208,7 +198,6 @@ def movie_detail(request, movie_id):
 def seat_selection(request, movie_id, session_time):
     movie = get_object_or_404(Cinema, id=movie_id)
     
-    # Preço do ingresso (fixo para o protótipo)
     ticket_price = 25.00
     
     return render(request, 'seat_selection.html', {
@@ -218,10 +207,9 @@ def seat_selection(request, movie_id, session_time):
     })
     
 def booking_finish(request):
-    # Pega os dados que vieram na URL
     movie_id = request.GET.get('movie_id')
     session_time = request.GET.get('time')
-    seats = request.GET.get('seats') # Ex: "A1,A2"
+    seats = request.GET.get('seats') 
     total = request.GET.get('total')
     
     movie = get_object_or_404(Cinema, id=movie_id)

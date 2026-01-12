@@ -1,5 +1,4 @@
 from cinema_booking.serializers import BookSeatSerializer
-# CORREÇÃO: Importar explicitamente
 from .models import Notification
 from rest_framework import serializers
 

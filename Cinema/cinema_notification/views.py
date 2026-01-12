@@ -3,7 +3,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-# CORREÇÃO: Importar explicitamente Models e Serializers
 from .models import Notification
 from .serializers import NotificationSerializer
 
@@ -13,7 +12,6 @@ class NotificationListView(generics.ListAPIView):
     permission_classes = (IsAuthenticated,)
 
     def list(self, request, *args, **kwargs):
-        # Chama o método estático ou de classe corretamente
         Notification.notification_read(self=self, user=self.request.user)
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
@@ -24,6 +22,5 @@ class UnreadNotificationCount(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        # Lógica para contar notificações não lidas
         count = Notification.objects.filter(user=request.user, read=False).count()
         return Response({'count': count}, status=200)

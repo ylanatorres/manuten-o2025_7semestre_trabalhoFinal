@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from managecinema.serializers import CinemaDeckSerializer
-# Importamos todos os modelos necessários
 from .models import AvailableSlots, Seat, BookSeat, SeatManager
 
 class AvailableSlotsReadSerializer(serializers.ModelSerializer):
@@ -21,7 +20,6 @@ class BookSeatSerializer(serializers.ModelSerializer):
         model = BookSeat
         fields = '__all__'
 
-# --- A CLASSE QUE FALTOU DESSA VEZ ---
 class SeatManagerSerializer(serializers.ModelSerializer):
     class Meta:
         model = SeatManager

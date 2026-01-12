@@ -1,5 +1,4 @@
 from rest_framework import serializers
-# --- CORREÇÃO DO SONAR: Importar explicitamente os modelos ---
 from .models import Cinema, CinemaDeck, MovieDurationSlot, CinemaArrangeSlot
 
 

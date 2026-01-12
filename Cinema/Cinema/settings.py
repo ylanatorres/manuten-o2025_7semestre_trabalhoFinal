@@ -142,20 +142,15 @@ USE_TZ = True
 # Static files
 STATIC_URL = '/static/'
 
-# --- CORREÇÃO DE SEGURANÇA: Credenciais de E-mail via Variáveis de Ambiente ---
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-# Nunca deixe seu e-mail hardcoded
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'seu_email_padrao@gmail.com') 
-# Nunca deixe sua senha hardcoded (isso protege sua conta Google)
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'senha_insegura_padrao') 
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 
 import os
 
-# URL para acessar as imagens no navegador
 MEDIA_URL = '/media/'
 
-# Pasta física no computador onde os arquivos ficam
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
