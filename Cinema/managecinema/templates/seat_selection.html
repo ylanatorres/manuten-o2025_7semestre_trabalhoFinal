@@ -2,14 +2,23 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Escolha seus Assentos - TicketCine</title>
     <style>
-        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; }
+        body { 
+            background-color: #0f172a; 
+            color: white; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
         
         h2 { color: #38bdf8; margin-bottom: 5px; }
         p { color: #94a3b8; margin-top: 0; }
 
-        
         .screen {
             background-color: #fff;
             height: 70px;
@@ -21,15 +30,20 @@
             border-radius: 10px;
         }
 
-       
-        .legend { display: flex; gap: 20px; margin-bottom: 20px; background: #1e293b; padding: 10px 20px; border-radius: 8px; }
+        .legend { 
+            display: flex; 
+            gap: 20px; 
+            margin-bottom: 20px; 
+            background: #1e293b; 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+        }
         .legend div { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
         .dot { width: 15px; height: 15px; border-radius: 5px; }
         .dot.free { background-color: #334155; }
         .dot.selected { background-color: #38bdf8; }
         .dot.occupied { background-color: #ef4444; }
 
-        
         .container { perspective: 1000px; margin-bottom: 30px; }
         .seat-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; width: fit-content; margin: 0 auto; }
 
@@ -48,13 +62,19 @@
         
         .seat.occupied { background-color: #ef4444; cursor: not-allowed; }
 
-        
         .summary-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background-color: #1e293b; padding: 20px;
             display: flex; justify-content: space-around; align-items: center;
             border-top: 1px solid #334155;
         }
+
+        /* Correção CSS Inline: Nova classe criada */
+        .summary-text {
+            font-size: 0.9rem; 
+            color: #94a3b8;
+        }
+
         .total-price { font-size: 1.5rem; font-weight: bold; color: #38bdf8; }
         
         .btn-finish {
@@ -112,7 +132,7 @@
 
     <div class="summary-bar">
         <div>
-            <div style="font-size: 0.9rem; color: #94a3b8;">Selecionados: <span id="count">0</span></div>
+            <div class="summary-text">Selecionados: <span id="count">0</span></div>
             <div class="total-price">R$ <span id="total">0,00</span></div>
         </div>
         <button id="btn-checkout" class="btn-finish" disabled>
@@ -127,17 +147,19 @@
         const total = document.getElementById('total');
         const btnCheckout = document.getElementById('btn-checkout');
         
-        const ticketPrice = {{ price }};
+        // Correção JS: Tratamento seguro da variável Django
+        const ticketPrice = parseFloat("{{ price }}".replace(',', '.'));
 
-        // atualizar totais
+        //atualizar totais
         function updateSelectedCount() {
             const selectedSeats = document.querySelectorAll('.seat.selected');
             const selectedSeatsCount = selectedSeats.length;
 
             count.innerText = selectedSeatsCount;
+            // Garante formatação correta (R$ XX,XX)
             total.innerText = (selectedSeatsCount * ticketPrice).toFixed(2).replace('.', ',');
 
-            // Habilita ou desabilita o botão
+           
             if (selectedSeatsCount > 0) {
                 btnCheckout.disabled = false;
             } else {
@@ -145,7 +167,6 @@
             }
         }
 
-        // Evento de Clique na Cadeira
         container.addEventListener('click', (e) => {
             if (e.target.classList.contains('seat') && !e.target.classList.contains('occupied')) {
                 e.target.classList.toggle('selected');
@@ -154,7 +175,6 @@
         });
 
         btnCheckout.addEventListener('click', () => {
-            // 1. Pega quais cadeiras estão selecionadas
             const selectedSeatsElements = document.querySelectorAll('.seat.selected');
             const selectedSeatsArray = [];
             
@@ -162,13 +182,10 @@
                 selectedSeatsArray.push(seat.getAttribute('data-seat'));
             });
 
-            // Transforma em texto (Ex: "A1,A2")
             const seatsString = selectedSeatsArray.join(',');
             
-            // Pega o valor total
             const totalValue = total.innerText;
 
-            // Dados vindos do Django
             const movieId = "{{ movie.id }}";
             const time = "{{ time }}";
             
