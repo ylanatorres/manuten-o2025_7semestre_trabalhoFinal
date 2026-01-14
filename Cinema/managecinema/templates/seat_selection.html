@@ -69,7 +69,6 @@
             border-top: 1px solid #334155;
         }
 
-        /* Correção CSS Inline: Nova classe criada */
         .summary-text {
             font-size: 0.9rem; 
             color: #94a3b8;
@@ -147,19 +146,15 @@
         const total = document.getElementById('total');
         const btnCheckout = document.getElementById('btn-checkout');
         
-        // Correção JS: Tratamento seguro da variável Django
-        const ticketPrice = parseFloat("{{ price }}".replace(',', '.'));
+        const ticketPrice = Number.parseFloat("{{ price }}".replace(',', '.'));
 
-        //atualizar totais
         function updateSelectedCount() {
             const selectedSeats = document.querySelectorAll('.seat.selected');
             const selectedSeatsCount = selectedSeats.length;
 
             count.innerText = selectedSeatsCount;
-            // Garante formatação correta (R$ XX,XX)
             total.innerText = (selectedSeatsCount * ticketPrice).toFixed(2).replace('.', ',');
 
-           
             if (selectedSeatsCount > 0) {
                 btnCheckout.disabled = false;
             } else {
@@ -179,7 +174,7 @@
             const selectedSeatsArray = [];
             
             selectedSeatsElements.forEach(seat => {
-                selectedSeatsArray.push(seat.getAttribute('data-seat'));
+                selectedSeatsArray.push(seat.dataset.seat);
             });
 
             const seatsString = selectedSeatsArray.join(',');
@@ -189,8 +184,7 @@
             const movieId = "{{ movie.id }}";
             const time = "{{ time }}";
             
-            
-            window.location.href = `{% url 'booking_finish' %}?movie_id=${movieId}&time=${time}&seats=${seatsString}&total=${totalValue}`;
+            globalThis.location.href = `{% url 'booking_finish' %}?movie_id=${movieId}&time=${time}&seats=${seatsString}&total=${totalValue}`;
         });
     </script>
 </body>
