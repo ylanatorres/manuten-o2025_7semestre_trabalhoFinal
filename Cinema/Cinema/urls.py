@@ -49,7 +49,7 @@ urlpatterns = [
         path('auth/', include('dj_rest_auth.urls')),
         path('auth/registration/', include('dj_rest_auth.registration.urls')),
         
-        #Apps
+        #apps
         path('user/', include('user.urls')),
         path('employee/', include('employee.urls')),
         path('managecinema/', include('managecinema.urls')),
@@ -58,7 +58,7 @@ urlpatterns = [
         path('feedback/', include('cinema_feedback.urls')),
     ])),
 
-    # rotas da Documentação 
+    #rotas da Documentação 
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
