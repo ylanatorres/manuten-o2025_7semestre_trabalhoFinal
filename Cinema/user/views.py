@@ -21,7 +21,7 @@ class UserViewSet(viewsets.ModelViewSet):
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
-from .models import User  # Seu modelo de usuário
+from .models import User  
 from django.contrib import messages
 
 #tela de Cadastro
