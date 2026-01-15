@@ -25,7 +25,7 @@ from user import views as user_views
 schema_view = get_schema_view(
    openapi.Info(
       title="Cinema API",
-      default_version='v1',
+      default_version='v1', #estrutura principal
       description="Documentação da API do Sistema de Cinema",
       terms_of_service="https://www.google.com/policies/terms/",
       contact=openapi.Contact(email="contact@snippets.local"),
